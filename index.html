@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مجسّم مشروع رصد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@600;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+html,body{margin:0}
+
+/* Layout: a dark instrument-bench page; the 3D exhibit table is the hero, a guided presentation tour sits under it, then the booth setup. */
+:root {
+  --bg: #0B1620;
+  --panel: #12212D;
+  --line: #22394A;
+  --fg: #EEF3F5;
+  --muted: #A9BAC4;
+  --accent: #2EC4A6;
+  --alert: #F2A93B;
+  --font-display: 'Noto Kufi Arabic', 'Segoe UI', Tahoma, sans-serif;
+  --font-body: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--bg); color: var(--fg); }
+body { font-family: var(--font-body); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 48px; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; flex-direction: column; gap: 4px; }
+.eyebrow { color: var(--accent); font-size: 15px; font-weight: 500; }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 5vw, 44px); line-height: 1.3; text-wrap: balance; }
+h2 { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 600; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 64ch; }
+.stage { position: relative; height: clamp(380px, 66vh, 640px); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #0E1C27; touch-action: none; }
+.stage canvas { display: block; width: 100%; height: 100%; }
+.labels { position: absolute; inset: 0; pointer-events: none; }
+.tag { position: absolute; transform: translate(-50%, calc(-100% - 10px)); background: #FFFFFF; color: #13212C; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+.tag::after { content: ""; position: absolute; left: 50%; bottom: -9px; width: 1px; height: 9px; background: #FFFFFF; }
+.tag.inner { background: var(--accent); color: #062A23; }
+.tag.inner::after { background: var(--accent); }
+.hint { position: absolute; inset-inline-start: 14px; bottom: 12px; font-size: 13px; color: var(--muted); background: rgba(11,22,32,.75); padding: 4px 10px; border-radius: 8px; }
+.fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn { font: inherit; font-size: 15px; font-weight: 600; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; min-height: 44px; cursor: pointer; }
+.btn:hover { border-color: #3A5A70; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn[aria-pressed="true"] { background: #0F2E2A; border-color: var(--accent); color: #BFF2E6; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #062A23; }
+.btn:disabled { opacity: .45; cursor: default; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg .btn { border: 0; border-radius: 0; }
+.seg .btn + .btn { border-inline-start: 1px solid var(--line); }
+.seg .btn.alert[aria-pressed="true"] { background: #33240D; color: #FFE1AE; }
+.status { margin: 0; color: var(--muted); font-size: 15px; min-height: 1.6em; }
+.status b { color: var(--fg); font-weight: 600; }
+.tour { border: 1px solid var(--accent); background: #0F2420; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.tour-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.tour-step { color: var(--accent); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tour h3 { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 600; }
+.tour p { margin: 0; color: #D5E3E8; max-width: 72ch; }
+.tour .say { color: var(--muted); font-size: 15px; }
+.tour .say b { color: var(--fg); }
+.tour-nav { display: flex; gap: 10px; flex-wrap: wrap; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.group { border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.group h2 { font-size: 18px; }
+.group ul, .group ol { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 6px; color: var(--muted); }
+.group li b { color: var(--fg); font-weight: 600; }
+.group li::marker { color: var(--accent); font-weight: 600; }
+.mins { color: var(--accent); font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><a href="https://github.com/Alwadai1/rasd" style="color:inherit">GitHub</a> · مشروع رصد · كشف الطائرات المسيّرة وتحديد هويتها · تصوّر افتراضي</div>
+    <h1>طاولة العرض بثلاثة أبعاد</h1>
+    <p class="lede">التصميم الجديد: لابتوب المتدرب هو العقل والشاشة، ورأس حساسات صغير يتصل به بكابل USB واحد. اسحب للتدوير، أو اضغط «ابدأ العرض الموجّه» لتمشي خطوة خطوة كما يُعرض المشروع أمام الزوار.</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <div class="labels" id="labels" aria-hidden="true"></div>
+    <div class="hint" id="hint">اسحب للتدوير</div>
+  </div>
+
+  <div class="controls" role="group" aria-label="التحكم في المجسّم">
+    <button class="btn primary" id="btnTour" type="button">ابدأ العرض الموجّه</button>
+    <button class="btn" id="btnInside" type="button" aria-pressed="false">إظهار داخل رأس الحساسات</button>
+    <div class="seg" role="group" aria-label="السيناريو">
+      <button class="btn alert" id="btnUnknown" type="button" aria-pressed="true">هدف لم يتم التعرف عليه</button>
+      <button class="btn" id="btnKnown" type="button" aria-pressed="false">هدف تم التعرف عليه</button>
+    </div>
+    <button class="btn" id="btnLabels" type="button" aria-pressed="true">الأسماء</button>
+    <button class="btn" id="btnSpin" type="button" aria-pressed="true">دوران تلقائي</button>
+    <button class="btn" id="btnReset" type="button">إعادة الزاوية</button>
+  </div>
+  <p class="status" id="status" aria-live="polite"></p>
+
+  <section class="tour" id="tour" hidden aria-live="polite">
+    <div class="tour-head">
+      <span class="tour-step" id="tourStep">الخطوة 1 من 6</span>
+      <div class="tour-nav">
+        <button class="btn" id="tourPrev" type="button">السابق</button>
+        <button class="btn primary" id="tourNext" type="button">التالي</button>
+        <button class="btn" id="tourEnd" type="button">إنهاء العرض</button>
+      </div>
+    </div>
+    <h3 id="tourTitle"></h3>
+    <p id="tourDo"></p>
+    <p class="say" id="tourSay"></p>
+  </section>
+
+  <h2>طريقة العرض في المعرض</h2>
+  <div class="cols">
+    <section class="group">
+      <h2>العرض أمام الزوار (حوالي 5 دقائق)</h2>
+      <ol>
+        <li><b>التعريف:</b> المشكلة والفكرة في جملتين، والإشارة إلى اللابتوب ورأس الحساسات. <span class="mins">30 ث</span></li>
+        <li><b>الرادار:</b> كيف يقيس المسافة بالموجات فوق الصوتية ويحدد الزاوية. <span class="mins">45 ث</span></li>
+        <li><b>الكاميرا:</b> تلتفت إلى زاوية الرادار وتتبع الهدف، والذكاء الاصطناعي يصنّفه شحن أم تصوير. <span class="mins">45 ث</span></li>
+        <li><b>هدف معروف:</b> تشغيل الدرون الافتراضي، فتظهر رسالة خضراء بهويته. <span class="mins">1 د</span></li>
+        <li><b>هدف مجهول:</b> إطفاء الدرون الافتراضي، فتظهر الرسالة البرتقالية ويبدأ الإنذار. <span class="mins">1 د</span></li>
+        <li><b>من الداخل:</b> فتح غطاء رأس الحساسات، وشرح اللوحات، ولماذا النظام معزول عن أي شبكة. <span class="mins">1 د</span></li>
+      </ol>
+    </section>
+    <section class="group">
+      <h2>تجهيز الطاولة</h2>
+      <ul>
+        <li><b>اللابتوب:</b> شاشته نحو الزوار، والـ WiFi مفصول، ولوحة المراقبة مفتوحة بملء الشاشة.</li>
+        <li><b>رأس الحساسات:</b> بجانب اللابتوب، الرادار والكاميرا متجهان إلى منطقة الدرون.</li>
+        <li><b>درون الألعاب:</b> معلّق بخيط أو على حامل أمام الرادار على بعد متر إلى مترين.</li>
+        <li><b>الدرون الافتراضي:</b> لوحة ESP32 على باور بانك، بيد المقدّم ليشغّلها ويطفئها.</li>
+        <li><b>الكهرباء:</b> توصيلة واحدة للابتوب ومصدر المحركات.</li>
+        <li><b>خلف الطاولة:</b> ستاند الرول أب.</li>
+        <li><b>احتياط:</b> فيديو مسجّل للعرض على اللابتوب، ولابتوب ثانٍ مجهّز.</li>
+      </ul>
+    </section>
+    <section class="group">
+      <h2>المكونات</h2>
+      <ul>
+        <li><b>لابتوب المتدرب:</b> لوحة المراقبة، ونموذج الكاميرا، وبرنامج الجسر</li>
+        <li><b>الرادار الدوّار:</b> HC-SR04 على سيرفو</li>
+        <li><b>الكاميرا المتحركة:</b> كاميرا ويب USB على القاعدة الخشبية من المعمل</li>
+        <li><b>داخل رأس الحساسات:</b> ESP32 لـ Remote ID، وArduino Nano، وموزّع USB</li>
+        <li><b>كابل USB واحد</b> بين رأس الحساسات واللابتوب</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  var stage = document.getElementById('stage');
+  var labelsEl = document.getElementById('labels');
+  var statusEl = document.getElementById('status');
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function fail() {
+    var d = document.createElement('div');
+    d.className = 'fallback';
+    d.textContent = 'لم يتمكن المتصفح من عرض المجسّم ثلاثي الأبعاد. جرّب متصفحاً آخر أو جهازاً آخر.';
+    stage.appendChild(d);
+  }
+  if (!window.THREE || !THREE.OrbitControls) { fail(); return; }
+  var renderer;
+  try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch (e) { fail(); return; }
+
+  var ACCENT = 0x2EC4A6, ALERT = 0xF2A93B;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  stage.insertBefore(renderer.domElement, labelsEl);
+  renderer.domElement.setAttribute('role', 'img');
+  renderer.domElement.setAttribute('aria-label', 'مجسّم ثلاثي الأبعاد لطاولة عرض مشروع رصد: لابتوب ورأس حساسات ودرون، يمكن تدويره');
+
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0E1C27);
+  scene.fog = new THREE.Fog(0x0E1C27, 24, 44);
+
+  var camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  var HOME = new THREE.Vector3(7, 6.2, 12);
+  var TARGET = new THREE.Vector3(0, 1.4, 0.6);
+  camera.position.copy(HOME);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.target.copy(TARGET);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 4;
+  controls.maxDistance = 24;
+  controls.maxPolarAngle = Math.PI * 0.49;
+  controls.autoRotate = !reduceMotion;
+  controls.autoRotateSpeed = 0.7;
+  controls.update();
+  controls.addEventListener('start', function () { document.getElementById('hint').hidden = true; camGoal = null; });
+
+  scene.add(new THREE.HemisphereLight(0xD8E8F0, 0x0B1620, 0.75));
+  var sun = new THREE.DirectionalLight(0xFFFFFF, 0.95);
+  sun.position.set(6, 12, 8);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.camera.left = -10; sun.shadow.camera.right = 10;
+  sun.shadow.camera.top = 10; sun.shadow.camera.bottom = -10;
+  scene.add(sun);
+  var fill = new THREE.DirectionalLight(0x9FD9CB, 0.25);
+  fill.position.set(-8, 5, -4);
+  scene.add(fill);
+
+  function mat(color, opts) {
+    return new THREE.MeshStandardMaterial(Object.assign({ color: color, roughness: 0.6, metalness: 0.15 }, opts || {}));
+  }
+  function box(w, h, d, m, x, y, z, parent) {
+    var mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    (parent || scene).add(mesh);
+    return mesh;
+  }
+  function cyl(r, h, m, x, y, z, parent, seg) {
+    var mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg || 24), m);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    (parent || scene).add(mesh);
+    return mesh;
+  }
+  function tube(points, color, r, parent) {
+    var c = new THREE.CatmullRomCurve3(points.map(function (p) { return new THREE.Vector3(p[0], p[1], p[2]); }));
+    var m = new THREE.Mesh(new THREE.TubeGeometry(c, 48, r || 0.03, 6), mat(color, { roughness: 0.7 }));
+    m.castShadow = true;
+    (parent || scene).add(m);
+    return m;
+  }
+
+  /* ---------- floor and exhibit table ---------- */
+  var floor = new THREE.Mesh(new THREE.CircleGeometry(16, 64), mat(0x101D27, { roughness: 1, metalness: 0 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = -0.02; floor.receiveShadow = true;
+  scene.add(floor);
+  var cloth = box(10.5, 0.04, 5.2, mat(0x15232E, { roughness: 0.95, metalness: 0 }), 0.3, 0, 0.6);
+  cloth.castShadow = false;
+
+  /* ---------- laptop ---------- */
+  var LX = -2.6, LZ = 0.7;
+  var lapMat = mat(0x8F9AA3, { metalness: 0.55, roughness: 0.35 });
+  box(3.6, 0.12, 2.5, lapMat, LX, 0.08, LZ);
+  box(3.1, 0.01, 1.2, mat(0x1A2228), LX, 0.145, LZ - 0.35);
+  box(1.0, 0.01, 0.6, mat(0x6F7A83, { metalness: 0.5 }), LX, 0.145, LZ + 0.75);
+  var lidPivot = new THREE.Group();
+  lidPivot.position.set(LX, 0.14, LZ - 1.25);
+  lidPivot.rotation.x = -0.28;
+  scene.add(lidPivot);
+  box(3.6, 2.35, 0.08, lapMat, 0, 1.18, 0.04, lidPivot);
+  box(3.45, 2.2, 0.01, mat(0x0B1620, { roughness: 0.3 }), 0, 1.18, 0.085, lidPivot);
+  var screenCanvas = document.createElement('canvas');
+  screenCanvas.width = 1024; screenCanvas.height = 640;
+  var screenTex = new THREE.CanvasTexture(screenCanvas);
+  screenTex.encoding = THREE.sRGBEncoding;
+  screenTex.anisotropy = 4;
+  var screen = new THREE.Mesh(new THREE.PlaneGeometry(3.3, 2.06), new THREE.MeshBasicMaterial({ map: screenTex }));
+  screen.position.set(0, 1.2, 0.092);
+  lidPivot.add(screen);
+
+  /* ---------- sensor head ---------- */
+  var HX = 2.5, HZ = 0.3, W = 2.8, H = 1.2, D = 1.8, T = 0.06;
+  var shellMat = mat(0x1C2B37, { roughness: 0.55, metalness: 0.25, transparent: true, opacity: 1 });
+  box(W, T, D, shellMat, HX, T / 2, HZ);
+  box(W, H, T, shellMat, HX, H / 2, HZ - D / 2 + T / 2);
+  box(T, H, D, shellMat, HX - W / 2 + T / 2, H / 2, HZ);
+  box(T, H, D, shellMat, HX + W / 2 - T / 2, H / 2, HZ);
+  box(W, H, T, shellMat, HX, H / 2, HZ + D / 2 - T / 2);
+  var lidMat = mat(0x26394A, { roughness: 0.5, metalness: 0.25, transparent: true, opacity: 1 });
+  var lid = box(W + 0.04, T, D + 0.04, lidMat, HX, H + T / 2, HZ);
+  var edgeMat = new THREE.LineBasicMaterial({ color: 0x3A5A70, transparent: true, opacity: 0 });
+  var edges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(W, H, D)), edgeMat);
+  edges.position.set(HX, H / 2, HZ);
+  scene.add(edges);
+
+  var plateCanvas = document.createElement('canvas');
+  plateCanvas.width = 512; plateCanvas.height = 160;
+  var plateTex = new THREE.CanvasTexture(plateCanvas);
+  plateTex.encoding = THREE.sRGBEncoding;
+  var plate = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.4), new THREE.MeshBasicMaterial({ map: plateTex, transparent: true }));
+  plate.position.set(HX - 0.45, 0.62, HZ + D / 2 + 0.01);
+  scene.add(plate);
+  var ledGreen = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 12), new THREE.MeshBasicMaterial({ color: ACCENT }));
+  ledGreen.position.set(HX + 0.75, 0.62, HZ + D / 2 + 0.02); scene.add(ledGreen);
+  var ledAmber = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 12), new THREE.MeshBasicMaterial({ color: ALERT }));
+  ledAmber.position.set(HX + 1.0, 0.62, HZ + D / 2 + 0.02); scene.add(ledAmber);
+
+  /* camera on the wooden pan-tilt base */
+  var wood = mat(0xD9B98A, { roughness: 0.85, metalness: 0 });
+  var servoBlack = mat(0x1E1E1E);
+  var camBase = new THREE.Group();
+  camBase.position.set(HX - 0.75, H + T, HZ + 0.15);
+  scene.add(camBase);
+  box(0.6, 0.06, 0.6, wood, 0, 0.03, 0, camBase);
+  box(0.06, 0.4, 0.5, wood, -0.22, 0.26, 0, camBase);
+  box(0.06, 0.4, 0.5, wood, 0.22, 0.26, 0, camBase);
+  box(0.3, 0.26, 0.16, servoBlack, 0, 0.2, 0.12, camBase);
+  var camPan = new THREE.Group();
+  camPan.position.set(0, 0.48, 0);
+  camBase.add(camPan);
+  cyl(0.24, 0.04, wood, 0, 0, 0, camPan);
+  box(0.06, 0.34, 0.06, wood, -0.2, 0.18, 0, camPan);
+  box(0.06, 0.34, 0.06, wood, 0.2, 0.18, 0, camPan);
+  box(0.14, 0.2, 0.22, servoBlack, 0.29, 0.2, 0, camPan);
+  var camTilt = new THREE.Group();
+  camTilt.position.set(0, 0.36, 0);
+  camPan.add(camTilt);
+  box(0.42, 0.24, 0.2, mat(0x202428, { roughness: 0.4 }), 0, 0, 0, camTilt);
+  var lens = cyl(0.07, 0.06, mat(0x0A0A0A, { roughness: 0.15 }), 0, 0, 0.12, camTilt);
+  lens.rotation.x = Math.PI / 2;
+  var viewGeo = new THREE.ConeGeometry(0.35, 1, 24, 1, true);
+  viewGeo.translate(0, -0.5, 0);
+  viewGeo.rotateX(-Math.PI / 2);
+  var viewMat = new THREE.MeshBasicMaterial({ color: ALERT, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
+  var viewCone = new THREE.Mesh(viewGeo, viewMat);
+  viewCone.position.set(0, 0, 0.15);
+  camTilt.add(viewCone);
+
+  /* rotating radar */
+  var radarBase = new THREE.Group();
+  radarBase.position.set(HX + 0.75, H + T, HZ + 0.1);
+  scene.add(radarBase);
+  box(0.4, 0.5, 0.3, mat(0x2F5FBF), 0, 0.25, 0, radarBase);
+  cyl(0.05, 0.1, mat(0xEEEEEE), 0, 0.55, 0, radarBase);
+  var radarHead = new THREE.Group();
+  radarHead.position.set(0, 0.72, 0);
+  radarBase.add(radarHead);
+  box(0.9, 0.3, 0.05, mat(0x1F3D8A), 0, 0, 0, radarHead);
+  [-0.23, 0.23].forEach(function (x) {
+    var t = cyl(0.12, 0.12, mat(0xC9CED3, { metalness: 0.7, roughness: 0.3 }), x, 0, 0.08, radarHead);
+    t.rotation.x = Math.PI / 2;
+  });
+  var beamGeo = new THREE.ConeGeometry(0.8, 3.0, 32, 1, true);
+  beamGeo.translate(0, -1.5, 0);
+  beamGeo.rotateX(-Math.PI / 2);
+  var beamMat = new THREE.MeshBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false });
+  var beam = new THREE.Mesh(beamGeo, beamMat);
+  beam.position.set(0, 0, 0.13);
+  radarHead.add(beam);
+
+  /* inside the sensor head */
+  var inside = new THREE.Group();
+  scene.add(inside);
+  var blueBoard = mat(0x1F3D8A);
+  box(0.9, 0.05, 0.4, blueBoard, HX - 0.6, 0.12, HZ - 0.45, inside);
+  box(0.32, 0.04, 0.26, mat(0xC9CED3, { metalness: 0.7 }), HX - 0.6, 0.165, HZ - 0.45, inside);
+  box(0.7, 0.05, 0.28, blueBoard, HX + 0.5, 0.12, HZ + 0.45, inside);
+  box(0.2, 0.04, 0.14, mat(0x2B2B2B), HX + 0.5, 0.165, HZ + 0.45, inside);
+  box(0.7, 0.16, 0.3, mat(0x3A3F44), HX + 0.65, 0.14, HZ - 0.45, inside);
+  box(0.4, 0.14, 0.3, mat(0xB23B3B), HX - 0.7, 0.13, HZ + 0.45, inside);
+  tube([[HX - 0.15, 0.14, HZ - 0.45], [HX + 0.1, 0.25, HZ - 0.6], [HX + 0.3, 0.16, HZ - 0.45]], 0x111111, 0.025, inside);
+  tube([[HX + 0.5, 0.15, HZ + 0.3], [HX + 0.6, 0.3, HZ], [HX + 0.65, 0.2, HZ - 0.3]], 0x111111, 0.025, inside);
+  tube([[HX + 0.5, 0.16, HZ + 0.45], [HX + 0.75, 0.7, HZ + 0.2], [HX + 0.75, H, HZ + 0.1]], 0x2F5FBF, 0.025, inside);
+  tube([[HX + 0.3, 0.16, HZ + 0.45], [HX - 0.3, 0.7, HZ + 0.3], [HX - 0.75, H, HZ + 0.15]], 0x2F5FBF, 0.025, inside);
+  tube([[HX + 0.9, 0.2, HZ - 0.45], [HX + 0.2, 0.8, HZ - 0.2], [HX - 0.75, H, HZ + 0.15]], 0x111111, 0.03, inside);
+  tube([[HX - 0.7, 0.2, HZ + 0.45], [HX, 0.6, HZ + 0.55], [HX + 0.75, H, HZ + 0.1]], 0xB23B3B, 0.025, inside);
+  inside.visible = false;
+
+  /* cables: one USB to the laptop, one power lead */
+  tube([[HX - W / 2, 0.25, HZ - 0.45], [HX - W / 2 - 0.5, 0.06, HZ - 0.3], [0, 0.04, 0.2], [LX + 1.82, 0.08, LZ - 0.2]], 0x111111, 0.045);
+  tube([[HX + W / 2, 0.25, HZ - 0.5], [HX + W / 2 + 0.5, 0.05, HZ - 0.8], [HX + W / 2 + 1.0, 0.05, HZ - 1.1]], 0x111111, 0.04);
+  box(0.36, 0.18, 0.26, mat(0x5A646C), HX + W / 2 + 1.2, 0.11, HZ - 1.2);
+
+  /* ---------- virtual drone and toy drone ---------- */
+  var VX = 0.4, VZ = 2.5;
+  box(1.0, 0.3, 0.56, mat(0xDADDE0, { roughness: 0.4 }), VX, 0.17, VZ);
+  box(0.8, 0.05, 0.36, blueBoard, VX, 0.345, VZ);
+  box(0.28, 0.04, 0.22, mat(0xC9CED3, { metalness: 0.7 }), VX, 0.39, VZ);
+  var rings = [];
+  for (var r = 0; r < 3; r++) {
+    var ring = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.012, 8, 64),
+      new THREE.MeshBasicMaterial({ color: ACCENT, transparent: true, opacity: 0, depthWrite: false }));
+    ring.rotation.x = Math.PI / 2;
+    ring.position.set(VX, 0.45, VZ);
+    scene.add(ring);
+    rings.push(ring);
+  }
+
+  var drone = new THREE.Group();
+  drone.position.set(1.8, 3.6, 4.0);
+  scene.add(drone);
+  var droneDark = mat(0x2E3338, { roughness: 0.5 });
+  box(0.55, 0.18, 0.55, droneDark, 0, 0, 0, drone);
+  var rotors = [];
+  [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(function (s) {
+    var arm = box(0.9, 0.05, 0.08, droneDark, s[0] * 0.32, 0, s[1] * 0.32, drone);
+    arm.rotation.y = s[0] * s[1] > 0 ? -Math.PI / 4 : Math.PI / 4;
+    cyl(0.05, 0.1, droneDark, s[0] * 0.62, 0.06, s[1] * 0.62, drone, 8);
+    var rotor = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.01, 24),
+      new THREE.MeshBasicMaterial({ color: 0x9AA6AF, transparent: true, opacity: 0.35, depthWrite: false }));
+    rotor.position.set(s[0] * 0.62, 0.13, s[1] * 0.62);
+    drone.add(rotor);
+    rotors.push(rotor);
+  });
+  var thread = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 3, 6), new THREE.MeshBasicMaterial({ color: 0xA9BAC4, transparent: true, opacity: 0.5 }));
+  scene.add(thread);
+
+  /* ---------- labels ---------- */
+  var labelDefs = [
+    { t: 'لابتوب المتدرب: لوحة المراقبة', p: [LX, 2.75, LZ - 1.5], g: 'out' },
+    { t: 'رأس الحساسات', p: [HX, 0.3, HZ + D / 2 + 0.1], g: 'out' },
+    { t: 'الكاميرا المتحركة', p: [0, 0, 0], g: 'out', cam: true },
+    { t: 'الرادار الدوّار', p: [HX + 0.75, H + 1.15, HZ + 0.1], g: 'out' },
+    { t: 'كابل USB واحد', p: [0.2, 0.1, 0.2], g: 'out' },
+    { t: 'الدرون الافتراضي (Remote ID)', p: [VX, 0.55, VZ], g: 'table' },
+    { t: 'درون ألعاب', p: [0, 0, 0], g: 'table', follow: drone },
+    { t: 'ESP32 لـ Remote ID', p: [HX - 0.6, 0.25, HZ - 0.45], g: 'in' },
+    { t: 'Arduino Nano', p: [HX + 0.5, 0.25, HZ + 0.45], g: 'in' },
+    { t: 'موزّع USB', p: [HX + 0.65, 0.3, HZ - 0.45], g: 'in' },
+    { t: 'مصدر المحركات', p: [HX - 0.7, 0.3, HZ + 0.45], g: 'in' }
+  ];
+  labelDefs.forEach(function (d) {
+    var el = document.createElement('div');
+    el.className = 'tag' + (d.g === 'in' ? ' inner' : '');
+    el.textContent = d.t;
+    labelsEl.appendChild(el);
+    d.el = el;
+    d.v = new THREE.Vector3(d.p[0], d.p[1], d.p[2]);
+  });
+
+  /* ---------- dashboard drawing ---------- */
+  var state = { inside: false, known: false, labels: true, locked: false };
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function drawScreen() {
+    var c = screenCanvas.getContext('2d');
+    var K = "'Noto Kufi Arabic', 'Segoe UI', Tahoma, sans-serif";
+    var B = "'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif";
+    c.direction = 'rtl';
+    c.fillStyle = '#0F2533'; c.fillRect(0, 0, 1024, 640);
+    c.fillStyle = '#B7C7D0'; c.font = '600 30px ' + B; c.textAlign = 'right';
+    c.fillText('رصد · لوحة المراقبة', 990, 56);
+    c.fillStyle = '#2EC4A6'; c.beginPath(); c.arc(40, 46, 10, 0, Math.PI * 2); c.fill();
+    var known = state.known, locked = state.locked;
+    c.fillStyle = !locked ? '#1A3344' : (known ? '#0F5A4C' : '#F2A93B');
+    roundRect(c, 34, 82, 956, 120, 14); c.fill();
+    c.fillStyle = !locked ? '#B7C7D0' : (known ? '#DFFAF3' : '#2B1A00');
+    c.font = '800 54px ' + K; c.textAlign = 'center';
+    c.fillText(!locked ? 'جاري المسح · الأجواء خالية' : (known ? 'هدف تم التعرف عليه' : 'هدف لم يتم التعرف عليه'), 512, 162);
+    var names = ['Remote ID', 'الكاميرا', 'الرادار'];
+    var sub = !locked ? (known ? ['بث مستلم', 'تبحث', 'يمسح'] : ['لا بث', 'تبحث', 'يمسح'])
+      : (known ? ['هوية مستلمة', 'تتبع · تصوير', 'زاوية 38°'] : ['لا هوية', 'تتبع الهدف', 'زاوية 38°']);
+    for (var i = 0; i < 3; i++) {
+      var x = 990 - (i + 1) * 304 - i * 22 + 22;
+      c.fillStyle = '#12212D'; roundRect(c, x, 232, 304, 190, 12); c.fill();
+      var on = i === 0 ? known : locked;
+      c.fillStyle = on ? (known ? '#2EC4A6' : '#F2A93B') : '#3E5260';
+      c.beginPath(); c.arc(x + 152, 272, 13, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#EEF3F5'; c.font = '600 30px ' + B; c.textAlign = 'center';
+      c.fillText(names[i], x + 152, 336);
+      c.fillStyle = '#8FA3AF'; c.font = '500 25px ' + B;
+      c.fillText(sub[i], x + 152, 382);
+    }
+    c.fillStyle = '#B7C7D0'; c.font = '500 28px ' + B; c.textAlign = 'right';
+    c.fillText(!locked ? 'الرادار يمسح والكاميرا تبحث' : (known ? 'الرقم التسلسلي: SAMPLE-0001 · الغرض: تصوير' : 'إنذار صوتي · تسجيل الحدث · إبلاغ الجهة المختصة'), 990, 490);
+    c.fillStyle = '#22394A'; roundRect(c, 34, 540, 956, 14, 7); c.fill();
+    c.fillStyle = !locked ? '#3E5260' : (known ? '#2EC4A6' : '#F2A93B'); roundRect(c, 34, 540, 420, 14, 7); c.fill();
+    screenTex.needsUpdate = true;
+
+    var p = plateCanvas.getContext('2d');
+    p.clearRect(0, 0, 512, 160);
+    p.direction = 'rtl'; p.textAlign = 'center';
+    p.fillStyle = '#DCE6EB'; p.font = '800 70px ' + K;
+    p.fillText('رَصْد', 256, 108);
+    plateTex.needsUpdate = true;
+  }
+  drawScreen();
+  if (document.fonts && document.fonts.load) {
+    Promise.all([
+      document.fonts.load("800 54px 'Noto Kufi Arabic'"),
+      document.fonts.load("600 30px 'IBM Plex Sans Arabic'")
+    ]).then(drawScreen, function () {});
+  }
+
+  /* ---------- UI ---------- */
+  var btnInside = document.getElementById('btnInside');
+  var btnKnown = document.getElementById('btnKnown');
+  var btnUnknown = document.getElementById('btnUnknown');
+  var btnLabels = document.getElementById('btnLabels');
+  var btnSpin = document.getElementById('btnSpin');
+  btnSpin.setAttribute('aria-pressed', String(controls.autoRotate));
+
+  var insideMix = 0;
+  function setStatus() {
+    var a = !state.locked
+      ? '<b>جاري المسح:</b> الرادار يدور والكاميرا تبحث. حين يمر شعاع الرادار على الدرون، تلتفت الكاميرا إليه وتتبعه.'
+      : (state.known
+        ? '<b>هدف تم التعرف عليه:</b> الكاميرا تتبع الدرون وتصنّفه، والدرون الافتراضي يبث Remote ID فتظهر هويته على شاشة اللابتوب.'
+        : '<b>هدف لم يتم التعرف عليه:</b> الكاميرا تتبع الدرون ولا توجد هوية، فيبدأ بروتوكول الاستجابة على شاشة اللابتوب.');
+    statusEl.innerHTML = a + (state.inside ? ' غطاء رأس الحساسات مرفوع لرؤية اللوحات.' : '');
+  }
+  function setInside(v) {
+    state.inside = v;
+    btnInside.setAttribute('aria-pressed', String(v));
+    btnInside.textContent = v ? 'إخفاء داخل رأس الحساسات' : 'إظهار داخل رأس الحساسات';
+    if (v) inside.visible = true;
+    setStatus();
+  }
+  btnInside.addEventListener('click', function () { setInside(!state.inside); });
+  function setKnown(k) {
+    state.known = k;
+    btnKnown.setAttribute('aria-pressed', String(k));
+    btnUnknown.setAttribute('aria-pressed', String(!k));
+    viewMat.color.setHex(k ? ACCENT : ALERT);
+    if (state.locked) beamMat.color.setHex(k ? ACCENT : ALERT);
+    drawScreen();
+    setStatus();
+  }
+  btnKnown.addEventListener('click', function () { setKnown(true); });
+  btnUnknown.addEventListener('click', function () { setKnown(false); });
+  btnLabels.addEventListener('click', function () {
+    state.labels = !state.labels;
+    btnLabels.setAttribute('aria-pressed', String(state.labels));
+    labelsEl.hidden = !state.labels;
+  });
+  function setSpin(v) {
+    controls.autoRotate = v;
+    btnSpin.setAttribute('aria-pressed', String(v));
+  }
+  btnSpin.addEventListener('click', function () { setSpin(!controls.autoRotate); });
+  var camGoal = null;
+  function flyTo(pos, target) {
+    camGoal = { pos: new THREE.Vector3(pos[0], pos[1], pos[2]), target: new THREE.Vector3(target[0], target[1], target[2]) };
+    if (reduceMotion) { camera.position.copy(camGoal.pos); controls.target.copy(camGoal.target); camGoal = null; }
+  }
+  document.getElementById('btnReset').addEventListener('click', function () {
+    flyTo([HOME.x, HOME.y, HOME.z], [TARGET.x, TARGET.y, TARGET.z]);
+  });
+  setKnown(false);
+
+  /* ---------- guided presentation ---------- */
+  var steps = [
+    { title: 'التعريف بالنظام', pos: [7, 6.2, 12], target: [0, 1.4, 0.6], known: false, inside: false,
+      act: 'قف بجانب الطاولة، وأشر إلى اللابتوب ثم إلى رأس الحساسات.',
+      say: '«رصد نظام محمول يكتشف الطائرات المسيّرة ويحدد هويتها. اللابتوب هو العقل والشاشة، وهذا رأس الحساسات فيه رادار وكاميرا وقارئ Remote ID، ويعمل بلا إنترنت.»' },
+    { title: 'الرادار يمسح', pos: [5.6, 3.4, 5.6], target: [HX + 0.75, 1.9, HZ], known: false, inside: false,
+      act: 'أشر إلى الرادار وهو يدور، وحرّك يدك أمامه ليرى الزوار القراءة على الشاشة.',
+      say: '«الرادار يرسل موجات فوق صوتية ويقيس زمن رجوعها، فيعرف المسافة. ولأنه يدور، يعرف زاوية الهدف أيضاً.»' },
+    { title: 'الكاميرا تلتفت وتصنّف', pos: [0.6, 3.2, 5.4], target: [HX - 0.75, 2.0, HZ], known: false, inside: false,
+      act: 'انتظر حتى يمر الرادار على درون الألعاب، فتلتفت الكاميرا إليه.',
+      say: '«حين يرصد الرادار هدفاً، تلتفت الكاميرا إلى زاويته وتتبعه، ونموذج ذكاء اصطناعي يحدد نوعه: شحن أم تصوير.»' },
+    { title: 'هدف تم التعرف عليه', pos: [1.0, 4.4, 9.5], target: [-1.2, 1.3, 1.0], known: true, inside: false,
+      act: 'شغّل الدرون الافتراضي (لوحة ESP32 على الباور بانك)، ثم أشر إلى الرسالة الخضراء على الشاشة.',
+      say: '«الدرون الملتزم يبث هويته كما تُلزم الهيئة العامة للطيران المدني. النظام قرأ رقمه التسلسلي وغرضه، فصنّفه هدفاً معروفاً.»' },
+    { title: 'هدف لم يتم التعرف عليه', pos: [-1.2, 3.0, 5.6], target: [LX, 1.3, LZ - 0.6], known: false, inside: false,
+      act: 'أطفئ الدرون الافتراضي، وانتظر الرسالة البرتقالية وصوت الإنذار.',
+      say: '«هذا درون لا يبث هوية. النظام يطلق إنذاراً، ويسجل الوقت والزاوية والمسافة، ويجهّز بلاغاً للجهة المختصة. الاعتراض من اختصاص الجهات الأمنية، ونظامنا يرصد فقط.»' },
+    { title: 'من الداخل', pos: [4.6, 4.6, 4.4], target: [HX, 0.4, HZ], known: false, inside: true,
+      act: 'ارفع غطاء رأس الحساسات وأشر إلى كل لوحة.',
+      say: '«في الداخل لوحة ESP32 تقرأ Remote ID، وArduino Nano يحرك الرادار والكاميرا، وكلها تصل باللابتوب بكابل USB واحد. النظام معزول عن أي شبكة، وبرنامج الجسر لا يمرر إلا أوامر معرّفة مسبقاً.»' }
+  ];
+  var tourEl = document.getElementById('tour');
+  var tourIdx = -1;
+  function showStep(i) {
+    tourIdx = i;
+    var s = steps[i];
+    document.getElementById('tourStep').textContent = 'الخطوة ' + (i + 1) + ' من ' + steps.length;
+    document.getElementById('tourTitle').textContent = s.title;
+    document.getElementById('tourDo').textContent = 'ماذا تفعل: ' + s.act;
+    document.getElementById('tourSay').innerHTML = '<b>ماذا تقول:</b> ' + s.say;
+    document.getElementById('tourPrev').disabled = i === 0;
+    document.getElementById('tourNext').textContent = i === steps.length - 1 ? 'إنهاء' : 'التالي';
+    setSpin(false);
+    setKnown(s.known);
+    setInside(s.inside);
+    if (i >= 2) { lockUntil = t + 9; radarHold = 1.0; }
+    flyTo(s.pos, s.target);
+  }
+  function endTour() {
+    tourIdx = -1;
+    tourEl.hidden = true;
+    setInside(false);
+    flyTo([HOME.x, HOME.y, HOME.z], [TARGET.x, TARGET.y, TARGET.z]);
+  }
+  document.getElementById('btnTour').addEventListener('click', function () {
+    tourEl.hidden = false;
+    document.getElementById('hint').hidden = true;
+    showStep(0);
+    tourEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+  });
+  document.getElementById('tourNext').addEventListener('click', function () {
+    if (tourIdx >= steps.length - 1) endTour(); else showStep(tourIdx + 1);
+  });
+  document.getElementById('tourPrev').addEventListener('click', function () { if (tourIdx > 0) showStep(tourIdx - 1); });
+  document.getElementById('tourEnd').addEventListener('click', endTour);
+
+  /* ---------- sizing ---------- */
+  function resize() {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.fov = w < 600 ? 52 : 38;
+    camera.updateProjectionMatrix();
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
+  window.addEventListener('resize', resize);
+  resize();
+
+  /* ---------- loop ---------- */
+  var tmp = new THREE.Vector3();
+  var camWorld = new THREE.Vector3();
+  var radarWorld = new THREE.Vector3();
+  var clock = new THREE.Clock();
+  var t = 0;
+  var radarPhase = 0, radarHold = 0, lockUntil = 0;
+  var SWEEP = 1.3;
+  function setLocked(v) {
+    if (state.locked === v) return;
+    state.locked = v;
+    beamMat.color.setHex(v ? (state.known ? ACCENT : ALERT) : ACCENT);
+    drawScreen();
+    setStatus();
+  }
+  function approach(cur, target, rate) { return cur + (target - cur) * rate; }
+  function tick() {
+    var dt = Math.min(clock.getDelta(), 0.05);
+    t += dt;
+    var target = state.inside ? 1 : 0;
+    insideMix += (target - insideMix) * Math.min(1, dt * 6);
+    if (Math.abs(insideMix - target) < 0.002) insideMix = target;
+    shellMat.opacity = 1 - insideMix * 0.82;
+    shellMat.depthWrite = insideMix < 0.5;
+    lidMat.opacity = 1 - insideMix * 0.9;
+    lidMat.depthWrite = insideMix < 0.5;
+    lid.position.y = H + T / 2 + insideMix * 1.4;
+    edgeMat.opacity = insideMix * 0.9;
+    if (!state.inside && insideMix === 0) inside.visible = false;
+
+    if (camGoal) {
+      var k = Math.min(1, dt * 2.6);
+      camera.position.lerp(camGoal.pos, k);
+      controls.target.lerp(camGoal.target, k);
+      if (camera.position.distanceTo(camGoal.pos) < 0.02 && controls.target.distanceTo(camGoal.target) < 0.02) camGoal = null;
+    }
+
+    rotors.forEach(function (ro, i) { ro.rotation.y += dt * (i % 2 ? 30 : -30); });
+    drone.position.y = 3.6 + Math.sin(t * 1.4) * 0.1;
+    drone.position.x = 1.8 + Math.sin(t * 0.25) * 0.4;
+    drone.rotation.y = Math.sin(t * 0.3) * 0.4;
+    thread.position.set(drone.position.x, drone.position.y + 1.6, drone.position.z);
+
+    radarHead.getWorldPosition(radarWorld);
+    var droneYaw = Math.atan2(drone.position.x - radarWorld.x, drone.position.z - radarWorld.z);
+    if (radarHold > 0) radarHold -= dt;
+    else radarPhase += dt * (reduceMotion ? 0.4 : 0.85);
+    var radarYaw = Math.sin(radarPhase) * SWEEP;
+    if (radarHold > 0 && t < lockUntil) radarYaw = droneYaw;
+    radarHead.rotation.y = radarYaw;
+    if (radarHold <= 0 && Math.abs(radarYaw - droneYaw) < 0.08 && t > lockUntil - 1) {
+      radarHold = 1.4;
+      lockUntil = t + 7;
+    }
+    setLocked(t < lockUntil);
+
+    var panTarget, tiltTarget;
+    if (state.locked) {
+      camTilt.getWorldPosition(camWorld);
+      var dx = drone.position.x - camWorld.x, dy = drone.position.y - camWorld.y, dz = drone.position.z - camWorld.z;
+      panTarget = Math.atan2(dx, dz);
+      tiltTarget = -Math.atan2(dy, Math.sqrt(dx * dx + dz * dz));
+      var dist = Math.sqrt(dx * dx + dy * dy + dz * dz) - 0.3;
+      viewCone.scale.set(dist * 0.22, dist * 0.22, dist);
+      viewMat.opacity = approach(viewMat.opacity, 0.16, Math.min(1, dt * 4));
+    } else {
+      panTarget = Math.sin(t * 0.35) * 0.9;
+      tiltTarget = -0.25 + Math.sin(t * 0.5) * 0.1;
+      viewMat.opacity = approach(viewMat.opacity, 0, Math.min(1, dt * 4));
+    }
+    var turn = Math.min(1, dt * (state.locked ? 4 : 2));
+    camPan.rotation.y = approach(camPan.rotation.y, panTarget, turn);
+    camTilt.rotation.x = approach(camTilt.rotation.x, tiltTarget, turn);
+
+    rings.forEach(function (ring, i) {
+      if (!state.known) { ring.material.opacity = 0; return; }
+      var ph = ((t * 0.6) + i / 3) % 1;
+      var s = 1 + ph * 4;
+      ring.scale.set(s, s, s);
+      ring.material.opacity = 0.6 * (1 - ph);
+    });
+    var alarm = state.locked && !state.known;
+    ledAmber.material.color.setHex(alarm ? (Math.sin(t * 8) > 0 ? ALERT : 0x5A3A10) : 0x3A2A10);
+    ledGreen.material.color.setHex(state.locked && state.known ? ACCENT : 0x0F3A30);
+
+    controls.update();
+    renderer.render(scene, camera);
+
+    if (state.labels) {
+      var w = stage.clientWidth, h = stage.clientHeight;
+      labelDefs.forEach(function (d) {
+        var show = d.g !== 'in' || insideMix > 0.6;
+        if (d.follow) d.v.set(d.follow.position.x, d.follow.position.y + 0.45, d.follow.position.z);
+        if (d.cam) { camTilt.getWorldPosition(d.v); d.v.y += 0.3; }
+        tmp.copy(d.v).project(camera);
+        if (!show || tmp.z > 1 || tmp.x < -1.1 || tmp.x > 1.1 || tmp.y < -1.1 || tmp.y > 1.1) { d.el.hidden = true; return; }
+        d.el.hidden = false;
+        d.el.style.left = ((tmp.x + 1) / 2 * w).toFixed(1) + 'px';
+        d.el.style.top = ((1 - tmp.y) / 2 * h).toFixed(1) + 'px';
+      });
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
+
+</body>
+</html>
